@@ -1,0 +1,364 @@
+<%- include header.html %>
+<style>
+    .header{
+        margin:15px 0;
+    }
+    .header a{
+        padding:40%;
+        color:#39B4FC;
+    }
+    .media-body p {
+        position:relative;
+        line-height:1em;
+        /* 高度为需要显示的行数*行高，比如这里我们显示两行，则为3 */
+        height:1em;
+        top:9px;
+        overflow:hidden;
+    }
+    .media-body p:after {
+        content:"...";
+        position:absolute;
+        bottom:0;
+        right:0;
+        padding: 0 10px;
+        background-color: #fff;
+    }
+    .media-heading {
+        position:relative;
+        line-height:1em;
+        /* 高度为需要显示的行数*行高，比如这里我们显示两行，则为3 */
+        top:3px;
+        height:1em;
+        overflow:hidden;
+    }
+    .media-heading:after {
+        content:"...";
+        position:absolute;
+        bottom:0;
+        right:0;
+        padding: 0 1px;
+        background-color: #fff;
+    }
+</style>
+<!-- 前端文件压缩插件 -->
+<script src="/static/js/lrz.bundle.js"></script>
+<div class="container" id='cameraApp'></div>
+<script type="text/babel">
+var Container = React.createClass({
+  getInitialState() {
+    let data = [{
+      title:'一首情诗',
+      content:'那时，我整天沉浸于自己的世界。',
+      src:'/static/img/1.jpeg',
+      href : '/show?id=30'
+    }];
+    return {
+      searchDisplay: false,
+      data:data,
+      page:1,
+      limit:9,
+      totalPage:0,
+      preStatus: "previous disabled",
+      nextStatus: "next disabled"
+    };
+  },
+  componentDidMount() {
+    this.getData('');
+  },
+  toggleSearch(){
+    this.setState({
+      searchDisplay: !this.state.searchDisplay
+    });
+  },
+  searchMV(){
+    let searchValue = $('#search').val();
+    this.getData(searchValue);
+  },
+  getData(searchValue){
+    let that = this;
+    let page = this.state.page;
+    let limit = this.state.limit;
+    $.ajax({
+      url:'/getmovie',
+      dataType:'json',
+      type:'POST',
+      data:{
+        page:page,
+        limit:limit,
+        searchValue:searchValue
+      },
+      success:function(data) {
+        let _data=data;
+        let arr =[];
+        _data.data.map(function(mdata) {
+          arr.push({
+            title:mdata.title,
+            href:'/show?id='+mdata.id,
+            content:mdata.poem.split('#')[0],
+            src:mdata.imgurl.split('#')[0]
+          });
+        });
+        let totalPage=_data.totalPages;
+        that.setState({
+          data:arr,
+          totalPage:totalPage,
+          preStatus: page==1 ? "previous disabled" : "previous",
+          nextStatus: page>=totalPage ? "next disabled" : "next"
+        });
+      }
+    });
+  },
+  handlePre(){
+    var page=this.state.page;
+    if (this.state.page >= 2) {
+      this.setState({
+        page:--this.state.page
+      });
+    }else {
+      this.setState({
+        page:1
+      });
+    }
+    this.getData('');
+  },
+  hanleNex(){
+    if (this.state.page <= this.state.totalPage-1) {
+      this.setState({
+        page:++this.state.page
+      });
+    }else {
+      this.setState({
+        page:this.state.totalPage
+      });
+    }
+    this.getData('');
+  },
+  render() {
+    return (
+      <div>
+        <div className="row header">
+            <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                <a href="/">
+                    <span className="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+            </div>
+            <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4" onClick={ this.toggleSearch }>
+                <a>
+                    <span className="glyphicon glyphicon-search" aria-hidden="true"></span>
+                </a>
+            </div>
+            <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                <a data-toggle="modal" data-target="#add">
+                    <span className="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </a>
+            </div>
+        </div>
+        <Search father = { this } />
+        <Content data = { this.state.data }/>
+        <Pager father={ this }/>
+        <Add />
+      </div>
+    );
+  }
+});
+var Search = React.createClass({
+  render() {
+    let that = this.props.father;
+      let styleObj={
+        display:that.state.searchDisplay ? 'block' : 'none',
+        margin:'10px 3px'
+      };
+      return(
+        <div className="row"  style={ styleObj }>
+          <div className="input-group">
+            <input type="text" className="form-control" placeholder="the title..." id="search"/>
+            <span className="input-group-btn">
+              <button className="btn btn-default" type="button" onClick={ that.searchMV }><i className="glyphicon glyphicon-search"></i></button>
+            </span>
+          </div>
+        </div>
+      );
+  }
+});
+var Content = React.createClass({
+  render() {
+    let img ={width:48,height:48};
+    let list = this.props.data.map(function(data) {
+      return(
+        <a className="list-group-item" href={ data.href }>
+          <div className="media">
+            <div className="media-left">
+              <a href="#">
+                <img className="media-object" src={ data.src } style={ img }/>
+              </a>
+            </div>
+            <div className="media-body">
+              <h4 className="media-heading">{ data.title }</h4>
+              <p>{ data.content }</p>
+            </div>
+          </div>
+        </a>
+      );
+    });
+    return (
+      <div className="list-group">
+        { list }
+      </div>
+    );
+  }
+});
+var Pager = React.createClass({
+  render(){
+    let that = this.props.father;
+    return(
+      <nav>
+        <ul className="pager">
+          <li className={ that.state.preStatus }><a onClick={ that.handlePre }>Older</a></li>
+          <li className={ that.state.nextStatus }><a onClick={ that.hanleNex }>Newer</a></li>
+        </ul>
+       </nav>
+     );
+  }
+});
+var Add = React.createClass({
+  componentDidMount() {
+    $('#title').on('focus',function() {
+      $('#titlemeg').text('');
+      $('#titlerr').removeClass('has-error');
+      $('#headmeg').text('');
+    });
+    $('#poem').on('focus',function() {
+      $('#poemmeg').text('');
+      $('#poemerr').removeClass('has-error');
+      $('#headmeg').text('');
+    });
+    $('#picture').on('change',function() {
+      $('#picturemeg').text('');
+      $('#picturerr').removeClass('has-error');
+      $('#headmeg').text('');
+    });
+    $('#token').on('focus',function() {
+      $('#tokenmeg').text('');
+      $('#tokenerr').removeClass('has-error');
+      $('#headmeg').text('');
+    });
+    $.ajax({
+      url:'/getoption',
+      type:'post',
+      dataType:'json',
+      success:function(data) {
+        let html ='';
+        $('#music').html('');
+        data.map(function(_data) {
+          html +='<option value="'+_data.src+'">'+_data.title+'</option>';
+        });
+        $('#music').html(html);
+      }
+    });
+  },
+  submit(){
+    let title = $('#title').val();
+    let poem = $('#poem').val();
+    let num = poem.split('#').length;
+    let music = $('#music').val();
+    let token = $('#token').val();
+    let files = document.querySelector('#picture').files;
+    let total = files.length;
+    if (title.length==0) {
+      $('#titlemeg').html("can't be none!");
+      $('#titlerr').addClass('has-error');
+      return false;
+    }
+    if (poem.length==0||num==0) {
+      $('#poemmeg').html("can't be none and must include '#'");
+      $('#poemerr').addClass('has-error');
+      return false;
+    }
+    if (total==0||total>10||num!=total) {
+      $('#picturemeg').html("can't be none or the number of picture should be in 10!");
+      $('#picturerr').addClass('has-error');
+      return false;
+    }
+    if (token.length==0) {
+      $('#tokenmeg').html("can't be none!");
+      $('#tokenerr').addClass('has-error');
+      return false;
+    }
+    for (let i = 0,file;file=files[i];i++) {
+      lrz(file,{width:800}).then(function(rst) {
+        rst.formData.append('title',title);
+        rst.formData.append('poem',poem);
+        rst.formData.append('music',music);
+        rst.formData.append('token',token);
+        $.ajax({
+          url:'/add',
+          type:'post',
+          dataType:'json',
+          processData: false,
+          contentType: false,
+          data:rst.formData,
+          async:false,
+          success:function(data) {
+            if (data==1) {
+              $('#headmeg').text('success,refresh 1s later');
+              if (total-1==i) {
+                setTimeout(function() {
+                  location.href = '/camera';
+                },1000);
+              }
+            }else {
+              $('#headmeg').text("something error(the token isn't correct)");
+            }
+          }
+        });
+      });
+
+    };
+  },
+  render() {
+    return (
+      <div className="modal fade" id="add" tabindex="-1" role="dialog">
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 className="modal-title">Add Camera<span id="headmeg" style={{color:'red'}}></span></h4>
+            </div>
+            <div className="modal-body">
+              <form enctype="multipart/form-data" action="/add" method="post">
+                <div className="form-group" id="titlerr">
+                  <label  className="control-label">Title:<i id="titlemeg"></i></label>
+                  <input type="text" className="form-control" id="title" placeholder="the title of poem" />
+                </div>
+                <div className="form-group" id="poemerr">
+                  <label  className="control-label">Poem:<i id="poemmeg"></i></label>
+                   <textarea className="form-control" id="poem" placeholder="the paragraph should be divided by '#'"></textarea>
+                </div>
+                <div className="form-group" id="picturerr">
+                  <label  className="control-label">Picture:<i id="picturemeg"></i></label>
+                  <input type="file" className="form-control" multiple="multiple" id="picture" accept="image/png,image/jpg,image/jpeg"/>
+                </div>
+                <div className="form-group" id="musicerr">
+                  <label  className="control-label">Music:<i id="musicmeg"></i></label>
+                  <select className="form-control" id="music">
+                    <option value="http://music.163.com/outchain/player?type=2&id=21725725&auto=0&height=66">the promise</option>
+                  </select>
+                </div>
+                <div className="form-group" id="tokenerr">
+                  <label  className="control-label">Token:<i id="tokenmeg"></i></label>
+                  <input type="password" className="form-control" id="token" />
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-default pull-left" data-dismiss="modal">Close</button>
+              <button type="button" className="btn btn-primary" onClick={ this.submit }>Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+});
+ReactDOM.render(<Container />, document.getElementById('cameraApp'));
+</script>

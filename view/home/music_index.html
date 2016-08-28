@@ -1,0 +1,287 @@
+<%- include header.html %>
+<style>
+    .header{
+        margin:15px 0;
+    }
+    .header a{
+        padding:40%;
+        color:#39B4FC;
+    }
+</style>
+<div class="container" id="musicApp"></div>
+<script type="text/babel">
+  var MusicApp = React.createClass({
+    getInitialState() {
+      let data = [{
+        title:'The promise',
+        author:'trueto',
+        src:'http://music.163.com/outchain/player?type=2&id=21725725&auto=0&height=66'
+      }];
+      return {
+        data: data,
+        page:1,
+        limit:1,
+        totalPage:0,
+        preStatus: "previous disabled",
+        nextStatus: "next disabled",
+        searchDisplay: false
+      };
+    },
+    componentWillMount() {
+      this.getMusic();
+    },
+    getMusic(searchValue){
+      let that = this;
+      let page = this.state.page;
+      let limit = this.state.limit;
+      $.ajax({
+        url:'/getmusic',
+        dataType:'json',
+        type:'POST',
+        data:{
+          page:page,
+          limit:limit,
+          searchValue:searchValue
+        },
+        success:function(data) {
+          let _data=data;
+          let totalPage=_data.totalPages;
+          that.setState({
+            data:_data.data,
+            totalPage:totalPage,
+            preStatus: page==1 ? "previous disabled" : "previous",
+            nextStatus: page>=totalPage ? "next disabled" : "next"
+          });
+        }
+      });
+    },
+    handlePre(){
+      var page=this.state.page;
+      if (this.state.page >= 2) {
+        this.setState({
+          page:--this.state.page
+        });
+      }else {
+        this.setState({
+          page:1
+        });
+      }
+      this.getMusic('');
+    },
+    hanleNex(){
+      if (this.state.page <= this.state.totalPage-1) {
+        this.setState({
+          page:++this.state.page
+        });
+      }else {
+        this.setState({
+          page:this.state.totalPage
+        });
+      }
+      this.getMusic('');
+    },
+    toggleSearch(){
+      this.setState({
+        searchDisplay: !this.state.searchDisplay
+      });
+    },
+    searchMusic:function () {
+      var searchValue = $('#search').val();
+      this.getMusic(searchValue);
+    },
+    render(){
+      return(
+        <div>
+          <div className="row header">
+            <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                <a href="/">
+                    <span className="glyphicon glyphicon-home" aria-hidden="true"></span>
+                </a>
+            </div>
+            <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4" onClick={ this.toggleSearch }>
+                <a>
+                    <span className="glyphicon glyphicon-search" aria-hidden="true"></span>
+                </a>
+            </div>
+            <div className="col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                <a data-toggle="modal" data-target="#addm">
+                    <span className="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </a>
+            </div>
+          </div>
+          <Search father={ this } />
+          <Addm />
+          <Content data ={this.state.data}/>
+          <Pager father={ this }/>
+        </div>
+      );
+    }
+  });
+  var Search=React.createClass({
+    render:function() {
+      let that = this.props.father;
+      let styleObj={
+        display:that.state.searchDisplay ? 'block' : 'none',
+        margin:'10px 10px'
+      };
+      return(
+        <div className="row"  style={ styleObj }>
+          <div className="input-group">
+            <input type="text" className="form-control" placeholder="Title or Author" id="search"/>
+            <span className="input-group-btn">
+              <button className="btn btn-default" type="button" onClick={ that.searchMusic }><i className="glyphicon glyphicon-search"></i></button>
+            </span>
+          </div>
+        </div>
+      );
+    }
+  });
+  var Addm = React.createClass({
+    componentDidMount() {
+      $('#title').on('focus',function() {
+        $('#titlemeg').text('');
+        $('#titlerr').removeClass('has-error');
+        $('#headmeg').text('');
+      });
+      $('#author').on('focus',function() {
+        $('#authormeg').text('');
+        $('#authorerr').removeClass('has-error');
+        $('#headmeg').text('');
+      });
+      $('#src').on('focus',function() {
+        $('#srcmeg').text('');
+        $('#srcerr').removeClass('has-error');
+        $('#headmeg').text('');
+      });
+      $('#token').on('focus',function() {
+        $('#tokenmeg').text('');
+        $('#tokenerr').removeClass('has-error');
+        $('#headmeg').text('');
+      });
+    },
+    submit(){
+      let title = $('#title').val();
+      let author = $('#author').val();
+      let src = $('#src').val();
+      let token = $('#token').val();
+      if (title.length==0) {
+        $('#titlemeg').html("can't be none!");
+        $('#titlerr').addClass('has-error');
+        return;
+      }
+      if (author.length==0) {
+        $('#authormeg').html("can't be none!");
+        $('#authorerr').addClass('has-error');
+        return;
+      }
+      if (src.length==0) {
+        $('#srcmeg').html("can't be none!");
+        $('#srcerr').addClass('has-error');
+        return;
+      }
+      if (token.length==0) {
+        $('#tokenmeg').html("can't be none!");
+        $('#tokenerr').addClass('has-error');
+        return;
+      }
+      $.ajax({
+        url:'/addm',
+        dataType:'json',
+        type:'POST',
+        data:{
+          title:title,
+          author:author,
+          src:src,
+          token:token
+        },
+        success:function(data) {
+          if (data==1) {
+            $('#headmeg').text('Success,will refresh 1s later!');
+            setTimeout(function() {
+              location.href = '/music';
+            },1000);
+          }else {
+            $('#headmeg').text(' something error(the token or repeated input)');
+          }
+        }
+      });
+    },
+    render() {
+      return (
+        <div className="modal fade" id="addm" tabindex="-1" role="dialog">
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 className="modal-title">Add Music<span id="headmeg" style={{color:'red'}}></span></h4>
+              </div>
+              <div className="modal-body">
+                <form>
+                  <div className="form-group" id="titlerr">
+                    <label  className="control-label">Title:<i id="titlemeg"></i></label>
+                    <input type="text" className="form-control" id="title" />
+                  </div>
+                  <div className="form-group" id="authorerr">
+                    <label  className="control-label">Author:<i id="authormeg"></i></label>
+                    <input type="text" className="form-control" id="author" />
+                  </div>
+                  <div className="form-group" id="srcerr">
+                    <label  className="control-label">Src:<i id="srcmeg"></i></label>
+                    <input type="text" className="form-control" id="src" />
+                  </div>
+                  <div className="form-group" id="tokenerr">
+                    <label  className="control-label">Token:<i id="tokenmeg"></i></label>
+                    <input type="password" className="form-control" id="token" />
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" className="btn btn-primary" onClick={ this.submit }>Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  });
+  var Content = React.createClass({
+    render() {
+      let datarr = this.props.data;
+      let style ={
+        'frameborder':'no','border':0,
+        'marginwidth':0,'marginheight':0,
+        'width':'100%','height':86
+      };
+      let list =datarr.map(function(data) {
+        return (<iframe style={ style } src={ data.src }></iframe>);
+      });
+      return (
+        <div>
+        <div className="row content">
+            <div className="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+              { list }
+            </div>
+        </div>
+        </div>
+      );
+    }
+  });
+  var Pager = React.createClass({
+    render(){
+      let that = this.props.father;
+      return(
+        <nav>
+          <ul className="pager">
+            <li className={ that.state.preStatus }><a onClick={ that.handlePre }>Older</a></li>
+            <li className={ that.state.nextStatus }><a onClick={ that.hanleNex }>Newer</a></li>
+          </ul>
+         </nav>
+       );
+    }
+  });
+  ReactDOM.render(
+    <MusicApp />,
+    document.getElementById('musicApp')
+  );
+</script>

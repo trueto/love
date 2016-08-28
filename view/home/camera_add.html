@@ -1,0 +1,44 @@
+<%- include header.html %>
+<div class="container" id="addApp"></div>
+<script type="text/babel">
+var Container = React.createClass({
+  render() {
+    return (
+      <form>
+        <div className="form-group" id="titlerr">
+          <label  className="control-label">Title:<i id="titlemeg"></i></label>
+          <input type="text" className="form-control" id="title" />
+        </div>
+        <div className="form-group" id="poemrerr">
+          <label  className="control-label">Poem:<i id="poemmeg"></i></label>
+           <textarea className="form-control" id="poem"></textarea>
+        </div>
+        <div className="form-group" id="picturerr">
+          <label  className="control-label">Picture:<i id="picturemeg"></i></label>
+          <input type="file" className="form-control" id="picture" />
+        </div>
+        <div className="form-group" id="musicerr">
+          <label  className="control-label">Music:<i id="musicmeg"></i></label>
+          <select className="form-control" id="music">
+            <option value="test">the promise</option>
+          </select>
+        </div>
+        <div className="form-group" id="tokenerr">
+          <label  className="control-label">Token:<i id="tokenmeg"></i></label>
+          <input type="text" className="form-control" id="token" />
+        </div>
+        <div className="form-group">
+          <div className="col-sm-6">
+            <button id="submit" className="btn btn-primary">Submit</button>
+          </div>
+          <div className="col-sm-6">
+            <button className="btn btn-default">Home</button>
+          </div>
+        </div>
+      </form>
+    );
+  }
+});
+
+ReactDOM.render(<Container />, document.getElementById('addApp'));
+</script>

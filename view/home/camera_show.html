@@ -1,0 +1,375 @@
+<%- include header.html %>
+<link rel="stylesheet" href="/static/share/css/share.min.css">
+<link rel="stylesheet" href="/static/css/movie.css">
+<link rel="stylesheet" href="/static/css/menu.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<!-- 用于接收后端数据 -->
+<p id="moviedataid"><%- moviedata.id %></p>
+<p id="moviedataT"><%- moviedata.title %></p>
+<p id="moviedataP"><%- moviedata.poem %></p>
+<p id="moviedataM"><%- moviedata.music %></p>
+<p id="moviedataimgurl"><%- moviedata.imgurl %></p>
+<div id="showApp"></div>
+<script src="/static/share/js/jquery.share.min.js"></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.2/TweenMax.min.js'></script>
+<script type="text/babel">
+    var ShowApp = React.createClass({
+      getInitialState() {
+        let data={
+          id:30,
+          title:'一首情诗',
+          poem:'那时，我整天沉浸于自己的世界。#'+
+                '不过，我还是注意到了那个高高的走读生，幸运的是你也关切着我。#'+
+                '你说：向我讨教问题时我没有耐心解释，后来索性不问，这是印象最深的事。#'+
+                '高中校园不大，你读文科我读理科。#'+
+                '3年时光里，我们居然没有在校园的角落里碰到过一次！#'+
+                '如今，大学三年过去，我们慢慢开始相互联系、相互理解、相互鼓励，渐渐互相喜欢。#'+
+                '你知道吗？互相表明心迹那晚，我的感觉就像怀里揣了个宝贝，害怕让人盗走。#'+
+                '我问：为什么自拍总是要带着别人？你说：因为害羞啊！哈哈，这样的你最是可人!',
+          imgurl:'/static/img/1.jpeg#/static/img/2.jpeg#'+
+                  '/static/img/3.jpeg#/static/img/4.jpeg#'+
+                  '/static/img/5.jpeg#/static/img/6.jpeg#'+
+                  '/static/img/7.jpeg#/static/img/8.jpeg',
+          music:'http://music.163.com/outchain/player?type=2&id=21725725&auto=1&height=66'
+        }
+        return {
+          data:data
+        };
+      },
+      componentWillMount() {
+        let id = $('#moviedataid').text();
+        let music = $('#moviedataM').text().replace('auto=0','auto=1');
+        let imgurl = $('#moviedataimgurl').text();
+        let poem = $('#moviedataP').text();
+        let title = $('#moviedataT').text();
+        this.setState({
+          data:{music,imgurl,poem,title,id}
+        });
+      },
+      render:function () {
+        return (
+          <div>
+          <Poem  data = { this.state.data }/>
+          <Menu data = { this.state.data }/>
+          <Share />
+          </div>
+        );
+      }
+    });
+    var Poem = React.createClass({
+      render:function() {
+        let i = 0;
+        let data=this.props.data;
+        let arr =data.poem.split('#');
+        let url =data.imgurl.split('#');
+        let total =arr.length*6;
+        let totalspan = "imageAnimation "+total+"s linear infinite 0s";
+        let totaldiv ="titleAnimation "+total+"s linear infinite 0s"
+        let list = arr.map(function(data) {
+          i++;
+          let single = (i-1)*6 +'s';
+          let span = {
+            "-webkit-animation": totalspan,"-moz-animation": totalspan,
+            "-o-animation": totalspan,"-ms-animation": totalspan,
+            "animation":totalspan,
+            'background-image': 'url('+url[i-1]+')',
+            "-webkit-animation-delay": single,
+            "-moz-animation-delay": single,
+            "-o-animation-delay": single,
+            "-ms-animation-delay": single,
+            "animation-delay": single,
+          };
+          let div = {
+            "-webkit-animation": totaldiv,"-moz-animation": totaldiv,
+            "-o-animation": totaldiv,"-ms-animation": totaldiv,
+            "animation": totaldiv,
+            "-webkit-animation-delay": single,
+            "-moz-animation-delay": single,
+            "-o-animation-delay": single,
+            "-ms-animation-delay": single,
+            "animation-delay": single,
+          };
+          return (<li><span style = { span } id="span"></span><div style = { div }><p>{ data }</p></div></li>);
+        });
+        return (
+          <div>
+           <iframe  style={{ 'display':'none' }}
+          src={ data.music }></iframe>
+          <ul className="cb-slideshow">
+              { list }
+          </ul>
+          </div>
+        );
+      }
+    });
+    var Menu = React.createClass({
+      componentDidMount:function () {
+        $(document).ready(function(){
+    			var menuItemNum=$(".menu-item").length;
+    			var angle=90;
+    			var distance=80;
+    			var startingAngle=90;
+    			var slice=angle/(menuItemNum-1);
+    			TweenMax.globalTimeScale(0.8);
+    			$(".menu-item").each(function(i){
+    				var angle=startingAngle+(slice*i);
+    				$(this).css({
+    					transform:"rotate("+(angle)+"deg)"
+    				})
+    				$(this).find(".menu-item-icon").css({
+    					transform:"rotate("+(-angle)+"deg)"
+    				})
+    			});
+    			var on=false;
+
+			    $(".menu-toggle-button").mousedown(function(){
+    				TweenMax.to($(".menu-toggle-icon"),0.1,{
+    					scale:0.8
+    				});
+    			});
+    			$(document).mouseup(function(){
+    				TweenMax.to($(".menu-toggle-icon"),0.1,{
+    					scale:1
+    				})
+    			});
+    			$(document).on("touchend",function(){
+    				$(document).trigger("mouseup")
+    			});
+			    $(".menu-toggle-button").on("mousedown",pressHandler);
+    			$(".menu-toggle-button").on("touchstart",function(event){
+    				$(this).trigger("mousedown");
+    				event.preventDefault();
+    				event.stopPropagation();
+    			});
+
+    			function pressHandler(event){
+    				on=!on;
+            on?openMenu():closeMenu();
+
+    			}
+  			   function openMenu(){
+             $('#menu').removeClass('menu-toggle-icon fa fa-list');
+             $('#menu').addClass('menu-toggle-icon fa fa-remove');
+    				$(".menu-item").each(function(i){
+    					var delay=i*0.08;
+
+    					var $bounce=$(this).children(".menu-item-bounce");
+
+    					TweenMax.fromTo($bounce,0.2,{
+    						transformOrigin:"50% 50%"
+    					},{
+    						delay:delay,
+    						scaleX:0.8,
+    						scaleY:1.2,
+    						force3D:true,
+    						ease:Quad.easeInOut,
+    						onComplete:function(){
+    							TweenMax.to($bounce,0.15,{
+    								// scaleX:1.2,
+    								scaleY:0.7,
+    								force3D:true,
+    								ease:Quad.easeInOut,
+    								onComplete:function(){
+    									TweenMax.to($bounce,3,{
+    										// scaleX:1,
+    										scaleY:0.8,
+    										force3D:true,
+    										ease:Elastic.easeOut,
+    										easeParams:[1.1,0.12]
+    									})
+    								}
+    							})
+    						}
+    					});
+
+    					TweenMax.to($(this).children(".menu-item-button"),0.5,{
+    						delay:delay,
+    						y:distance,
+    						force3D:true,
+    						ease:Quint.easeInOut
+    					});
+    				})
+    			 }
+    			function closeMenu(){
+            $('#menu').removeClass('menu-toggle-icon fa fa-remove');
+            $('#menu').addClass('menu-toggle-icon fa fa-list');
+    				$(".menu-item").each(function(i){
+    					var delay=i*0.08;
+
+    					var $bounce=$(this).children(".menu-item-bounce");
+
+    					TweenMax.fromTo($bounce,0.2,{
+    						transformOrigin:"50% 50%"
+    					},{
+    						delay:delay,
+    						scaleX:1,
+    						scaleY:0.8,
+    						force3D:true,
+    						ease:Quad.easeInOut,
+    						onComplete:function(){
+    							TweenMax.to($bounce,0.15,{
+    								// scaleX:1.2,
+    								scaleY:1.2,
+    								force3D:true,
+    								ease:Quad.easeInOut,
+    								onComplete:function(){
+    									TweenMax.to($bounce,3,{
+    										// scaleX:1,
+    										scaleY:1,
+    										force3D:true,
+    										ease:Elastic.easeOut,
+    										easeParams:[1.1,0.12]
+    									})
+    								}
+    							})
+    						}
+    					});
+
+
+    					TweenMax.to($(this).children(".menu-item-button"),0.3,{
+    						delay:delay,
+    						y:0,
+    						force3D:true,
+    						ease:Quint.easeIn
+    					});
+    				})
+    			}
+  		    });
+      },
+      backHome:function() {
+        location.href = '/camera';
+      },
+      rePlay:function() {
+        location.href= '/show?id='+this.props.data.id;
+      },
+      submit:function () {
+        let id =this.props.data.id;
+        let token = $('#token').val();
+        if (token.length==0) {
+          $('#tokenmeg').html("can't be none!");
+          $('#tokenerr').addClass('has-error');
+          return false;
+        }
+        $.ajax({
+          url:'/trash',
+          dataType:'json',
+          type:'post',
+          data:{id,token},
+          success:function(data) {
+            if (data==1) {
+              $('#headmeg').text('success,refresh 1s later');
+              setTimeout(function() {
+                location.href = '/camera';
+              },1000);
+            }else {
+              $('#headmeg').text("something error(the token isn't correct)");
+            }
+          }
+        });
+      },
+      render:function() {
+        return (
+          <div>
+            <Trash father = { this } />
+            <div className='menu-wrapper'>
+             <ul className='menu-items'>
+              <li className='menu-item'>
+                <button className='menu-item-button' onClick={ this.backHome }>
+                  <i className='fa fa-home'></i>
+                </button>
+                <div className='menu-item-bounce'></div>
+              </li>
+              <li className='menu-item'>
+                <button className='menu-item-button' onClick={ this.rePlay }>
+                  <i className='fa fa-refresh'></i>
+                </button>
+                <div className='menu-item-bounce'></div>
+              </li>
+              <li className='menu-item'>
+                <button className='menu-item-button' data-toggle="modal" data-target="#trash">
+                  <i className='fa fa-trash'></i>
+                </button>
+                <div className='menu-item-bounce'></div>
+              </li>
+              <li className='menu-item'>
+                <button className='menu-item-button' data-toggle="modal" data-target="#share">
+                  <i className='fa fa-share'></i>
+                </button>
+                <div className='menu-item-bounce'></div>
+              </li>
+              </ul>
+              <button className='menu-toggle-button'>
+                <i id="menu" className="menu-toggle-icon fa fa-list"></i>
+              </button>
+          </div>
+          </div>
+        );
+      }
+    });
+    var Trash = React.createClass({
+      componentDidMount() {
+        $('#token').on('focus',function() {
+          $('#tokenmeg').text('');
+          $('#tokenerr').removeClass('has-error');
+          $('#headmeg').text('');
+        });
+      },
+      render() {
+        let that = this.props.father;
+        return (
+          <div className="modal fade" id="trash" tabindex="-1" role="dialog">
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 className="modal-title">Trash the Item</h4><span id='headmeg' style={{'color':'red'}}></span>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group" id="tokenerr">
+                    <label  className="control-label">Token:<i id="tokenmeg"></i></label>
+                    <input type="password" className="form-control" id="token" placeholder="Tape the token to trash this item!"/>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                  <button type="button" className="btn btn-primary" onClick={ that.submit }>Sure</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+    });
+    var Share = React.createClass({
+      componentDidMount:function () {
+        $('#shareV').share({
+          sites:['qzone','qq','weibo','wechat']
+        });
+      },
+      render:function() {
+        let row ={'margin':'0 25%'};
+        return (
+          <div className="modal fade" id="share" tabindex="-1" role="dialog">
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 className="modal-title">Share this page</h4>
+                </div>
+                <div className="modal-body">
+                  <div className="row" style={ row }>
+                    <div id="shareV"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    });
+    ReactDOM.render(
+        <ShowApp />,
+        document.getElementById('showApp')
+    );
+</script>

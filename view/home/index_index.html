@@ -1,0 +1,54 @@
+<%- include header.html %>
+  <!--自定义css-->
+<link rel="stylesheet" href="/static/css/index.css">
+  <div class="container">
+        <div class="header row">
+      <div class="header-content">
+        <div class="logo">
+          <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">
+            <!--头像-->
+            <img src="/static/img/logo.jpg" alt="">
+          </a>
+        </div>
+        <div class="headline">
+          The webapp for my love,Zhao Fang!
+        </div>
+        <div class="steps">
+          <div class="step col-md-4 col-xs-4">
+            <div class="step-img">
+              <!--网易音乐logo-->
+              <a href="/camera">
+              <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+              </a>
+            </div>
+            <div class="step-desc">Movie</div>
+          </div>
+          <div class="step col-md-4 col-xs-4">
+            <div class="step-img">
+              <a href="/show?id=1">
+              <span class="glyphicon glyphicon-heart" aria-hidden="true" style="color:#EC412D"></span>
+              </a>
+            </div>
+            <div class="step-desc">LOVE</div>
+          </div>
+          <div class="step col-md-4 col-xs-4">
+            <div class="step-img">
+              <a href="/music">
+                <span class="glyphicon glyphicon-music" aria-hidden="true"></span>
+              </a>
+            </div>
+            <div class="step-desc">Music</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    $('.logo > a').popover({
+      content:'Yes,she is my girlfriend!',
+      delay:{ "hide": 1000 },
+      placement:'auto'
+    });
+  </script>
+</body>
+</html>
